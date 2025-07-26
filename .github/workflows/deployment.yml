@@ -58,3 +58,34 @@ jobs:
         
         # CORRECTED: Apply all manifest files in the k8s directory
         kubectl apply -f k8/
+    - name: Run smoke test on live endpoint
+      run: |
+        echo "Waiting for external IP address..."
+        # Loop for up to 5 minutes (20 attempts * 15 seconds) waiting for the IP
+        for i in {1..20}; do
+          # Use jsonpath to directly query for the IP. It's more reliable than parsing text.
+          IP_ADDRESS=$(kubectl get service iris-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          if [ -n "$IP_ADDRESS" ]; then
+            echo "External IP found: $IP_ADDRESS"
+            break
+          fi
+          echo "Attempt $i/20: IP not available yet. Waiting 15 seconds..."
+          sleep 15
+        done
+
+        if [ -z "$IP_ADDRESS" ]; then
+          echo "Error: Failed to get external IP address for iris-service after 5 minutes."
+          # Print final service status for debugging
+          kubectl describe service iris-service
+          exit 1
+        fi
+        
+        echo "Running curl test against /predict/ endpoint..."
+        # Run the curl command and check the output for the expected prediction.
+        # The 'grep' command will fail the step if "setosa" is not in the response.
+        curl -s -X 'POST' "http://$IP_ADDRESS/predict/" \
+          -H 'Content-Type: application/json' \
+          -d '{"sepal_length": 5.1, "sepal_width": 3.5, "petal_length": 1.4, "petal_width": 0.2}' \
+          | grep '"prediction_class":"setosa"'
+          
+        echo "Smoke test passed!"
