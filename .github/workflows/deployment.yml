@@ -50,14 +50,11 @@ jobs:
       run: |
         gcloud container clusters get-credentials ${{ env.CLUSTER_NAME }} --zone ${{ env.CLUSTER_ZONE }}
         
-    # NEW FINAL STEP: Deploy using kubectl apply
     - name: Deploy to GKE
       run: |
-        # Define the full image URL
         IMAGE_URL="${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:latest"
+        # Update the image placeholder in the deployment file
+        sed -i "s|IMAGE_PLACEHOLDER|$IMAGE_URL|g" k8s/deployment.yaml
         
-        # Replace the placeholder in the deployment manifest
-        sed -i "s|IMAGE_PLACEHOLDER|$IMAGE_URL|g" k8/deployement.yml
-        
-        # Apply the manifest to create or update the deployment
-        kubectl apply -f k8/deployement.yml
+        # CORRECTED: Apply all manifest files in the k8s directory
+        kubectl apply -f k8/
