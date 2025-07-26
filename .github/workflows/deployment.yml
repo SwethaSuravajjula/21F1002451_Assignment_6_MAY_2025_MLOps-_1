@@ -30,7 +30,7 @@ jobs:
     # Your new manual authentication step
     - name: Authenticate to Google Cloud
       env:
-        GCP_CREDENTIALS_B64: ${{ secrets.GCP_CREDENTIALS_B64 }}
+        GCP_CREDENTIALS_B64: ${{ secrets.GCP_SA_KEYS }}
       run: |
         # Decode the Base64 secret and create the service account key file
         echo "$GCP_CREDENTIALS_B64" | base64 -d > gcp-key.json
