@@ -22,13 +22,24 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v2
-      with:
-        credentials_json: '${{ secrets.GCP_SA_KEY }}'
-
+    # The 'google-github-actions/auth' action is now replaced by your manual steps.
+    # The gcloud CLI needs to be set up first.
     - name: Set up gcloud CLI
       uses: google-github-actions/setup-gcloud@v2
+
+    # Your new manual authentication step
+    - name: Authenticate to Google Cloud
+      env:
+        GCP_CREDENTIALS_B64: ${{ secrets.GCP_CREDENTIALS_B64 }}
+      run: |
+        # Decode the Base64 secret and create the service account key file
+        echo "$GCP_CREDENTIALS_B64" | base64 -d > gcp-key.json
+        
+        # Authenticate with gcloud using the key file
+        gcloud auth activate-service-account --key-file=gcp-key.json
+        
+        # Set the project for all subsequent gcloud commands
+        gcloud config set project ${{ env.PROJECT_ID }}
 
     - name: Configure Docker for Artifact Registry
       run: |
