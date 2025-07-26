@@ -7,10 +7,12 @@ on:
 
 env:
   PROJECT_ID: fourth-scheme-461516-n2
-  GAR_LOCATION: us-central1
+  # CORRECTED: This must match the region of your Artifact Registry repository.
+  GAR_LOCATION: us-west1
   REPO_NAME: repo
   IMAGE_NAME: iris-api
   CLUSTER_NAME: gke-cluster-iris
+  # This zone can be different from GAR_LOCATION, but we use GAR_LOCATION for all registry operations.
   CLUSTER_ZONE: us-west1
   DEPLOYMENT_NAME: iris-deployment
 
@@ -22,45 +24,42 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # The 'google-github-actions/auth' action is now replaced by your manual steps.
-    # The gcloud CLI needs to be set up first.
     - name: Set up gcloud CLI
       uses: google-github-actions/setup-gcloud@v2
 
-    # Your new manual authentication step
     - name: Authenticate to Google Cloud
       env:
+        # Ensure this secret name matches what you have in GitHub settings.
         GCP_CREDENTIALS_B64: ${{ secrets.GCP_SA_KEYS }}
       run: |
-        # Decode the Base64 secret and create the service account key file
         echo "$GCP_CREDENTIALS_B64" | base64 -d > gcp-key.json
-        
-        # Authenticate with gcloud using the key file
         gcloud auth activate-service-account --key-file=gcp-key.json
-        
-        # Set the project for all subsequent gcloud commands
         gcloud config set project ${{ env.PROJECT_ID }}
-
+        
     - name: Configure Docker for Artifact Registry
       run: |
+        # CORRECTED: Now configures Docker for the correct regional registry.
         gcloud auth configure-docker ${{ env.GAR_LOCATION }}-docker.pkg.dev
-
+        
     - name: Build Docker image
       run: |
         docker build -t ${{ env.IMAGE_NAME }} .
-
+        
     - name: Tag Docker image
       run: |
-        docker tag ${{ env.IMAGE_NAME }} ${{ env.CLUSTER_ZONE }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:latest
-
+        # CORRECTED: Using the consistent GAR_LOCATION variable.
+        docker tag ${{ env.IMAGE_NAME }} ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:latest
+        
     - name: Push Docker image to Artifact Registry
       run: |
-        docker push ${{ env.CLUSTER_ZONE }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:latest
-
+        # CORRECTED: Using the consistent GAR_LOCATION variable.
+        docker push ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:latest
+        
     - name: Get GKE cluster credentials
       run: |
         gcloud container clusters get-credentials ${{ env.CLUSTER_NAME }} --zone ${{ env.CLUSTER_ZONE }}
-
+        
     - name: Deploy to GKE with kubectl
       run: |
+        # CORRECTED: This now points to the correct image URL that was just pushed.
         kubectl set image deployment/${{ env.DEPLOYMENT_NAME }} ${{ env.IMAGE_NAME }}=${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:latest
