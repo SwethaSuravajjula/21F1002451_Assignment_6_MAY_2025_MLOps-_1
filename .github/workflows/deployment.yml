@@ -54,7 +54,7 @@ jobs:
       run: |
         IMAGE_URL="${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:latest"
         # Update the image placeholder in the deployment file
-        sed -i "s|IMAGE_PLACEHOLDER|$IMAGE_URL|g" k8s/deployment.yaml
+        sed -i "s|IMAGE_PLACEHOLDER|$IMAGE_URL|g" k8/deployement.yml
         
         # CORRECTED: Apply all manifest files in the k8s directory
         kubectl apply -f k8/
