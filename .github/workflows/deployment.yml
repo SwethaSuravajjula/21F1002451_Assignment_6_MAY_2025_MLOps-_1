@@ -22,23 +22,18 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # The 'google-github-actions/auth' action is now replaced by your manual steps.
-    # The gcloud CLI needs to be set up first.
     - name: Set up gcloud CLI
       uses: google-github-actions/setup-gcloud@v2
 
-    # Your new manual authentication step
-    - name: Authenticate to Google Cloud
+    - name: Set up GCP credentials and authenticate
       env:
-        GCP_CREDENTIALS_B64: ${{ secrets.GCP_CREDENTIALS_B64 }}
+        GCP_B64: ${{ secrets.GCP_CREDENTIALS_B64 }}
       run: |
-        # Decode the Base64 secret and create the service account key file
-        echo "$GCP_CREDENTIALS_B64" | base64 -d > gcp-key.json
-        
-        # Authenticate with gcloud using the key file
+        echo "$GCP_B64" | base64 -d > gcp-key.json
+        echo "GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/gcp-key.json" >> $GITHUB_ENV
+        export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/gcp-key.json
+
         gcloud auth activate-service-account --key-file=gcp-key.json
-        
-        # Set the project for all subsequent gcloud commands
         gcloud config set project ${{ env.PROJECT_ID }}
 
     - name: Configure Docker for Artifact Registry
@@ -51,11 +46,11 @@ jobs:
 
     - name: Tag Docker image
       run: |
-        docker tag ${{ env.IMAGE_NAME }} ${{ env.CLUSTER_ZONE }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:latest
+        docker tag ${{ env.IMAGE_NAME }} ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:latest
 
     - name: Push Docker image to Artifact Registry
       run: |
-        docker push ${{ env.CLUSTER_ZONE }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:latest
+        docker push ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:latest
 
     - name: Get GKE cluster credentials
       run: |
@@ -63,4 +58,4 @@ jobs:
 
     - name: Deploy to GKE with kubectl
       run: |
-        kubectl set image deployment/${{ env.DEPLOYMENT_NAME }} ${{ env.IMAGE_NAME }}=${{ env.CLUSTER_ZONE }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:latest
+        kubectl set image deployment/${{ env.DEPLOYMENT_NAME }} ${{ env.IMAGE_NAME }}=${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:latest
