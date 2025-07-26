@@ -8,7 +8,7 @@ on:
 env:
   PROJECT_ID: fourth-scheme-461516-n2
   GAR_LOCATION: us-central1
-  REPO_NAME: repo
+  REPO_NAME: my-repo
   IMAGE_NAME: iris-api
   CLUSTER_NAME: gke-cluster-iris
   CLUSTER_ZONE: us-west1
@@ -22,18 +22,23 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    # The 'google-github-actions/auth' action is now replaced by your manual steps.
+    # The gcloud CLI needs to be set up first.
     - name: Set up gcloud CLI
       uses: google-github-actions/setup-gcloud@v2
 
-    - name: Set up GCP credentials and authenticate
+    # Your new manual authentication step
+    - name: Authenticate to Google Cloud
       env:
-        GCP_B64: ${{ secrets.GCP_CREDENTIALS_B64 }}
+        GCP_CREDENTIALS_B64: ${{ secrets.GCP_CREDENTIALS_B64 }}
       run: |
-        echo "$GCP_B64" | base64 -d > gcp-key.json
-        echo "GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/gcp-key.json" >> $GITHUB_ENV
-        export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/gcp-key.json
-
+        # Decode the Base64 secret and create the service account key file
+        echo "$GCP_CREDENTIALS_B64" | base64 -d > gcp-key.json
+        
+        # Authenticate with gcloud using the key file
         gcloud auth activate-service-account --key-file=gcp-key.json
+        
+        # Set the project for all subsequent gcloud commands
         gcloud config set project ${{ env.PROJECT_ID }}
 
     - name: Configure Docker for Artifact Registry
