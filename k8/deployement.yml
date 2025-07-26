@@ -1,0 +1,24 @@
+# k8s/deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iris-deployment # This must match your DEPLOYMENT_NAME env var
+  labels:
+    app: iris
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: iris
+  template:
+    metadata:
+      labels:
+        app: iris
+    spec:
+      containers:
+      - name: iris-api   # This should match your IMAGE_NAME env var
+        image: IMAGE_PLACEHOLDER # This placeholder will be replaced by the workflow
+        ports:
+        - containerPort: 80
+        - TargetPort: 8100
