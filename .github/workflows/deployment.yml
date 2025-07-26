@@ -8,7 +8,7 @@ on:
 env:
   PROJECT_ID: fourth-scheme-461516-n2
   GAR_LOCATION: us-central1
-  REPO_NAME: my-repo
+  REPO_NAME: repo
   IMAGE_NAME: iris-api
   CLUSTER_NAME: gke-cluster-iris
   CLUSTER_ZONE: us-west1
