@@ -72,4 +72,4 @@ The project dependencies are listed in the `requirements.txt` file:
 
 ---
 
-Let me know if you'd like a badge section, project screenshot, or API usage example added.
+
