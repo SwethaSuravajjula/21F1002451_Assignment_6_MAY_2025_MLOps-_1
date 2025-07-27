@@ -1,7 +1,3 @@
-Here is the beautified `README.md` with improved formatting, without altering the information content, and with the **Folder Structure** section removed as requested:
-
----
-
 # 🌸 Iris Species Prediction API
 
 ## 🎯 Assignment Objective
